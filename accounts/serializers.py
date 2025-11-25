@@ -5,9 +5,11 @@ from django.db import transaction
 from .models import ClienteProfile, PrestadorProfile
 from servicos.models import Servico
 from servicos.serializers import ServicoSerializer
+from portfolio.serializers import PortfolioItemSerializer
+from avaliacoes.models import Avaliacao
 
 User = get_user_model() 
-#Registrar cliente
+
 class ClienteRegistrationSerializer(serializers.ModelSerializer):
     telefone_contato = serializers.CharField(write_only=True)
     cep = serializers.CharField(write_only=True)
@@ -21,8 +23,7 @@ class ClienteRegistrationSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'email', 
-            'first_name', 
-            'last_name', 
+            'nome_completo',
             'dt_nascimento',
             'genero',
             'cpf',
@@ -45,7 +46,6 @@ class ClienteRegistrationSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        
         profile_data = {
             'telefone_contato': validated_data.get('telefone_contato'),
             'cep': validated_data.get('cep'),
@@ -65,19 +65,16 @@ class ClienteRegistrationSerializer(serializers.ModelSerializer):
 
         user = User.objects.create_user(
             username=user_data['email'], 
-            tipo_usuario='cliente', 
-            **user_data
+            tipo_usuario='cliente',
+            **user_data 
         )
-
         
         profile = ClienteProfile(user=user, **profile_data)
         profile.save() 
 
         return user
 
-#Registrar prestador
 class PrestadorRegistrationSerializer(serializers.ModelSerializer):
-
     biografia = serializers.CharField(allow_blank=True, required=False, write_only=True)
     telefone_publico = serializers.CharField(write_only=True)
     cep = serializers.CharField(write_only=True)
@@ -85,7 +82,6 @@ class PrestadorRegistrationSerializer(serializers.ModelSerializer):
     numero_casa = serializers.CharField(write_only=True)
     
     disponibilidade = serializers.BooleanField(default=False, write_only=True) 
-    
     possui_material_proprio = serializers.BooleanField(default=False, write_only=True)
     atende_fim_de_semana = serializers.BooleanField(default=False, write_only=True)
 
@@ -102,8 +98,7 @@ class PrestadorRegistrationSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'email', 
-            'first_name', 
-            'last_name', 
+            'nome_completo',
             'dt_nascimento',
             'genero',
             'cpf',
@@ -130,7 +125,6 @@ class PrestadorRegistrationSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        
         profile_data = {
             'biografia': validated_data.get('biografia', ''),
             'telefone_publico': validated_data.get('telefone_publico'),
@@ -152,9 +146,9 @@ class PrestadorRegistrationSerializer(serializers.ModelSerializer):
         
         user_data = validated_data
 
-
+     
         user = User.objects.create_user(
-            username=user_data['email'], 
+            username=user_data['email'],
             tipo_usuario='prestador',
             **user_data
         )
@@ -167,7 +161,6 @@ class PrestadorRegistrationSerializer(serializers.ModelSerializer):
             
         return user
 
-#Registro personalizado do login (JWT) para o front saber quem está logado.
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
@@ -176,46 +169,72 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
     def validate(self, attrs):
         data = super().validate(attrs)
-        
         data['user_id'] = self.user.id
-        data['nome'] = f"{self.user.first_name} {self.user.last_name}"
+        data['nome'] = self.user.nome_completo
         data['email'] = self.user.email
         data['tipo_usuario'] = self.user.tipo_usuario
-
         return data
+
+class AvaliacaoSimplesSerializer(serializers.ModelSerializer):
+    cliente_nome = serializers.CharField(source='solicitacao_contato.cliente.nome_completo', read_only=True)
+    data = serializers.DateTimeField(source='data_criacao', format="%d/%m/%Y", read_only=True)
     
-#Endpoint de listagem de prestador para o público. (dados seguros)
+    class Meta:
+        model = Avaliacao
+        fields = ['cliente_nome', 'nota', 'comentario', 'data']
+
 class PrestadorPublicoSerializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(source='user.id', read_only=True)
-    nome = serializers.CharField(source='user.first_name', read_only=True)
-    sobrenome = serializers.CharField(source='user.last_name', read_only=True)
+    nome = serializers.CharField(source='user.nome_completo', read_only=True)
     email = serializers.EmailField(source='user.email', read_only=True)
     
-    #Lista de servicos.
     servicos = ServicoSerializer(many=True, read_only=True)
-    
-    # Foto com url
     foto = serializers.ImageField(source='foto_perfil', read_only=True)
-
     distancia = serializers.FloatField(read_only=True, required=False)
+
+    localizacao = serializers.SerializerMethodField()
+
+    portfolio = PortfolioItemSerializer(source='portfolioitem_set', many=True, read_only=True)
+    nota_media = serializers.DecimalField(source='nota_media_cache', max_digits=3, decimal_places=1, read_only=True)
+    total_avaliacoes = serializers.IntegerField(source='total_avaliacoes_cache', read_only=True)
+    ultimas_avaliacoes = serializers.SerializerMethodField()
 
     class Meta:
         model = PrestadorProfile
         fields = [
             'id',
-            'user_id',
+            'user_id', 
             'nome', 
-            'sobrenome',
             'email',
             'foto',
+            'localizacao',
             'biografia',
             'telefone_publico',
-            'disponibilidade',          # Filtro: 24h
-            'possui_material_proprio',  # Filtro: Material
-            'atende_fim_de_semana',     # Filtro: Fim de semana
+            'disponibilidade',
+            'possui_material_proprio',
+            'atende_fim_de_semana',
             'latitude',
             'longitude',
-            'servicos',# Filtro: Categoria e Serviço
-            'distancia', #Filtro: Distância do usuário
+            'cidade', 'bairro', 'estado', 
+            'servicos',
+            'distancia',
+            'portfolio',
+            'nota_media',
+            'total_avaliacoes',
+            'ultimas_avaliacoes'
         ]
 
+    def get_localizacao(self, obj):
+        partes = []
+        if obj.cidade: partes.append(obj.cidade)
+        if obj.bairro: partes.append(obj.bairro)
+        if obj.estado: partes.append(obj.estado)
+        return ", ".join(partes) if partes else "Localização não informada"
+
+    def get_ultimas_avaliacoes(self, obj):
+        avaliacoes = Avaliacao.objects.filter(
+            solicitacao_contato__prestador=obj.user
+        ).order_by('-data_criacao')[:5]
+        
+        return AvaliacaoSimplesSerializer(avaliacoes, many=True).data
+    

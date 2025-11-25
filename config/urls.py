@@ -41,6 +41,8 @@ urlpatterns = [
     path('api/contratacoes/', include('contratacoes.urls')),
     #Avaliações
     path('api/avaliacoes/', include('avaliacoes.urls')),
+    #Portfólio
+    path('api/portfolio/', include('portfolio.urls')),
     
 
     # --- ROTAS DA DOCUMENTAÇÃO (SWAGGER) ---
