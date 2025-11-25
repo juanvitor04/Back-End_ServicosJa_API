@@ -158,6 +158,8 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    #Acesso ao swagger
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     # Define a permissão padrão (ex: só utilizadores logados)
     # Por agora, vamos deixar aberto para testes, mas podemos mudar para IsAuthenticated
     'DEFAULT_PERMISSION_CLASSES': (
@@ -178,4 +180,6 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '1.0.0',
     # Opcional, mas limpa a UI:
     'SERVE_INCLUDE_SCHEMA': False,
+    # Isso ajuda o Swagger a entender uploads de arquivos (como no Portfólio)
+    'COMPONENT_SPLIT_REQUEST': True,
 }
