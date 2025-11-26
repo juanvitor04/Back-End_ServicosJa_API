@@ -236,7 +236,8 @@ class PrestadorPublicoSerializer(serializers.ModelSerializer):
         return AvaliacaoSimplesSerializer(avaliacoes, many=True).data
 
 class PrestadorProfileEditSerializer(serializers.ModelSerializer):
-    foto_perfil = serializers.ImageField(required=False)
+    #Trocar depois para imageField para referenciar uma imagem.
+    foto_perfil = serializers.CharField(required=False)
     biografia = serializers.CharField(required=False)
     
     class Meta:
