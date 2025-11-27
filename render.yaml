@@ -1,0 +1,30 @@
+databases:
+  - name: servicosja-db
+    databaseName: servicosja
+    user: servicosja_user
+    plan: free
+    region: oregon
+
+services:
+  - type: web
+    name: servicosja-api
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn config.wsgi:application"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: servicosja-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "false"
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: PYTHON_VERSION
+        value: "3.11.9"
