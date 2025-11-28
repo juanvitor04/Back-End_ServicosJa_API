@@ -15,5 +15,9 @@ python manage.py migrate --noinput --verbosity 2
 echo "Creating superuser..."
 python create_superuser.py
 
+echo "Creating initial services..."
+python manage.py shell < criar_services.py
+
 echo "Starting Gunicorn..."
-gunicorn config.wsgi:application --log-level debug
+gunicorn config.wsgi:application --bind 0.0.0.0:8000
+
