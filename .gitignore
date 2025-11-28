@@ -60,10 +60,6 @@ cover/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
-*/migrations/
-*/migrations/*
-migrations/
-migrations/*
 
 # Flask stuff:
 instance/
@@ -197,6 +193,9 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Django migrations
+migrations/
 
 # Cursor
 #  Cursor is an AI-powered code editor. `.cursorignore` specifies files/directories to
