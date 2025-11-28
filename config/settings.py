@@ -110,6 +110,14 @@ DATABASES = {
     )
 }
 
+# Debugging DB connection
+import sys
+print(f"DEBUG: DATABASE_URL in env: {'DATABASE_URL' in os.environ}", file=sys.stderr)
+if 'DATABASE_URL' in os.environ:
+    print(f"DEBUG: DATABASE_URL value starts with: {os.environ['DATABASE_URL'][:10]}...", file=sys.stderr)
+print(f"DEBUG: Active DB Engine: {DATABASES['default']['ENGINE']}", file=sys.stderr)
+print(f"DEBUG: Active DB Name: {DATABASES['default']['NAME']}", file=sys.stderr)
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
