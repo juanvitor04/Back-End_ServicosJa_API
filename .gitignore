@@ -195,7 +195,7 @@ cython_debug/
 .pypirc
 
 # Django migrations
-migrations/
+# migrations/
 
 # Cursor
 #  Cursor is an AI-powered code editor. `.cursorignore` specifies files/directories to
