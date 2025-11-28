@@ -157,7 +157,7 @@ class PrestadorListView(generics.ListAPIView):
 class PrestadorProfileEditView(generics.UpdateAPIView):
     """
     Endpoint para edição do perfil do prestador (foto e biografia).
-    Requer autenticação.
+    precisa de autenticação.
     """
     serializer_class = PrestadorProfileEditSerializer
     permission_classes = [IsAuthenticated]

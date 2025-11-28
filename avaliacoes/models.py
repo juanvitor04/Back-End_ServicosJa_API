@@ -5,10 +5,6 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 User = get_user_model()
 
 class Avaliacao(models.Model):
-    """
-    O Cliente avalia uma 'SolicitacaoContato' específica.
-    Isso garante que ele só pode avaliar se tiver clicado no botão de contato antes.
-    """
     solicitacao_contato = models.OneToOneField(
         'contratacoes.SolicitacaoContato',
         on_delete=models.CASCADE,

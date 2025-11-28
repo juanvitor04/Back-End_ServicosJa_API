@@ -1,5 +1,16 @@
 import os
 import django
+import subprocess
+
+subprocess.run(
+    ["python", "manage.py", "makemigrations"],
+    capture_output=True
+)
+
+subprocess.run(
+    ["python", "manage.py", "migrate"],
+    capture_output=True
+)
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
