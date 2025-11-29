@@ -256,6 +256,11 @@ def create_interactions(clientes, prestadores):
     print("Interações criadas.")
 
 def run():
+    # Verifica se já existem usuários para evitar duplicação/erros em deploys subsequentes
+    if User.objects.filter(tipo_usuario__in=['cliente', 'prestador']).exists():
+        print("Banco de dados já contém usuários. Pulando população de dados de exemplo.")
+        return
+
     try:
         with transaction.atomic():
             create_services()
@@ -266,6 +271,8 @@ def run():
         print(f"Erro durante a população de dados: {e}")
         import traceback
         traceback.print_exc()
+        # Re-raise exception to ensure the script exits with error code if something goes wrong
+        raise e
 
 if __name__ == '__main__':
     run()
