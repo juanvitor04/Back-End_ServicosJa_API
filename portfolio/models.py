@@ -8,7 +8,7 @@ class PortfolioItem(models.Model):
         related_name='portfolioitem_set'
     )
     
-    imagem = models.ImageField(upload_to='portfolio/')
+    imagem = models.ImageField(upload_to='portfolio/', null=True, blank=True)
     descricao = models.CharField(max_length=255, blank=True) 
 
     created_at = models.DateTimeField(auto_now_add=True)

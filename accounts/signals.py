@@ -17,8 +17,12 @@ def atualizar_cache_avaliacao(sender, instance, **kwargs):
         )
     
         total = todas_avaliacoes.count()
-        media = todas_avaliacoes.aggregate(avg=models.Avg('nota'))['avg'] or 0
+        media = todas_avaliacoes.aggregate(avg=models.Avg('nota'))['avg']
         
+        # Se não houver avaliações, mantém a nota 5
+        if media is None:
+            media = 5.0
+            
         profile.total_avaliacoes_cache = total
         profile.nota_media_cache = round(media, 2)
         

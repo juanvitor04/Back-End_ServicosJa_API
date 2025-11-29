@@ -2,6 +2,7 @@ from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.db.models import Count
 from .models import ClienteProfile, PrestadorProfile
 from servicos.models import Servico, CategoriaServico
 from servicos.serializers import ServicoSerializer
@@ -11,11 +12,11 @@ from avaliacoes.models import Avaliacao
 User = get_user_model() 
 
 class ClienteRegistrationSerializer(serializers.ModelSerializer):
+    dt_nascimento = serializers.DateField(format="%d/%m/%Y", input_formats=["%d/%m/%Y", "%Y-%m-%d"])
     telefone_contato = serializers.CharField(write_only=True)
     cep = serializers.CharField(write_only=True)
     rua = serializers.CharField(write_only=True)
     numero_casa = serializers.CharField(write_only=True)
-    complemento = serializers.CharField(allow_blank=True, required=False, write_only=True)
     
     password2 = serializers.CharField(style={'input_type': 'password'}, write_only=True)
 
@@ -33,10 +34,12 @@ class ClienteRegistrationSerializer(serializers.ModelSerializer):
             'cep', 
             'rua', 
             'numero_casa', 
-            'complemento',
         ]
         extra_kwargs = {
             'password': {'write_only': True},
+            'dt_nascimento': {'required': True},
+            'genero': {'required': True},
+            'cpf': {'required': True},
         }
 
     def validate(self, data):
@@ -51,7 +54,6 @@ class ClienteRegistrationSerializer(serializers.ModelSerializer):
             'cep': validated_data.get('cep'),
             'rua': validated_data.get('rua'),
             'numero_casa': validated_data.get('numero_casa'),
-            'complemento': validated_data.get('complemento', '')
         }
 
         validated_data.pop('password2', None)
@@ -59,7 +61,6 @@ class ClienteRegistrationSerializer(serializers.ModelSerializer):
         validated_data.pop('cep', None)
         validated_data.pop('rua', None)
         validated_data.pop('numero_casa', None)
-        validated_data.pop('complemento', None)
 
         user_data = validated_data
 
@@ -75,12 +76,13 @@ class ClienteRegistrationSerializer(serializers.ModelSerializer):
         return user
 
 class PrestadorRegistrationSerializer(serializers.ModelSerializer):
+    dt_nascimento = serializers.DateField(format="%d/%m/%Y", input_formats=["%d/%m/%Y", "%Y-%m-%d"])
     telefone_publico = serializers.CharField(write_only=True)
     cep = serializers.CharField(write_only=True)
     rua = serializers.CharField(write_only=True)
     numero_casa = serializers.CharField(write_only=True)
     
-    disponibilidade = serializers.BooleanField(default=False, write_only=True) 
+    disponibilidade = serializers.BooleanField(write_only=True) 
     possui_material_proprio = serializers.BooleanField(default=False, write_only=True)
     atende_fim_de_semana = serializers.BooleanField(default=False, write_only=True)
 
@@ -120,6 +122,9 @@ class PrestadorRegistrationSerializer(serializers.ModelSerializer):
         ]
         extra_kwargs = {
             'password': {'write_only': True},
+            'dt_nascimento': {'required': True},
+            'genero': {'required': True},
+            'cpf': {'required': True},
         }
 
     def validate(self, data):
@@ -207,7 +212,9 @@ class PrestadorPublicoSerializer(serializers.ModelSerializer):
     portfolio = PortfolioItemSerializer(source='portfolioitem_set', many=True, read_only=True)
     nota_media = serializers.DecimalField(source='nota_media_cache', max_digits=3, decimal_places=1, read_only=True)
     total_avaliacoes = serializers.IntegerField(source='total_avaliacoes_cache', read_only=True)
+    estatisticas = serializers.SerializerMethodField()
     ultimas_avaliacoes = serializers.SerializerMethodField()
+    data_registro = serializers.DateTimeField(source='created_at', format="%d/%m/%Y", read_only=True)
 
     class Meta:
         model = PrestadorProfile
@@ -231,8 +238,34 @@ class PrestadorPublicoSerializer(serializers.ModelSerializer):
             'portfolio',
             'nota_media',
             'total_avaliacoes',
-            'ultimas_avaliacoes'
+            'estatisticas',
+            'ultimas_avaliacoes',
+            'data_registro'
         ]
+
+    def get_estatisticas(self, obj):
+        queryset = Avaliacao.objects.filter(solicitacao_contato__prestador=obj.user)
+        
+        counts = queryset.values('nota').annotate(count=Count('nota')).order_by('nota')
+        
+        # Inicializa contadores
+        distribuicao = {i: 0 for i in range(1, 6)}
+        total = obj.total_avaliacoes_cache # Usando cache para performance
+        
+        for item in counts:
+            distribuicao[item['nota']] = item['count']
+            
+        # Calcula porcentagens
+        stats_distribuicao = {}
+        for nota, count in distribuicao.items():
+            stats_distribuicao[f"estrelas_{nota}"] = {
+                "quantidade": count,
+                "porcentagem": round((count / total * 100), 2) if total > 0 else 0
+            }
+            
+        return {
+            "distribuicao": stats_distribuicao
+        }
 
     def get_localizacao(self, obj):
         partes = []
@@ -255,3 +288,81 @@ class PrestadorProfileEditSerializer(serializers.ModelSerializer):
     class Meta:
         model = PrestadorProfile
         fields = ['foto_perfil', 'biografia']
+
+class ClienteProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClienteProfile
+        fields = ['telefone_contato', 'cep', 'rua', 'numero_casa', 'complemento', 'cidade', 'bairro', 'estado', 'latitude', 'longitude']
+
+class PrestadorProfileSerializer(serializers.ModelSerializer):
+    servico = serializers.PrimaryKeyRelatedField(queryset=Servico.objects.all(), required=False)
+
+    class Meta:
+        model = PrestadorProfile
+        fields = [
+            'biografia', 'telefone_publico', 'cep', 'rua', 'numero_casa', 'complemento', 
+            'cidade', 'bairro', 'estado', 'latitude', 'longitude', 
+            'disponibilidade', 'possui_material_proprio', 'atende_fim_de_semana', 
+            'foto_perfil', 'servico'
+        ]
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    """
+    Serializer para o endpoint /me/. Permite ver e editar dados do usuário e do seu perfil específico.
+    """
+    dt_nascimento = serializers.DateField(format="%d/%m/%Y", input_formats=["%d/%m/%Y", "%Y-%m-%d"], required=False)
+    
+    # Campos aninhados para edição
+    perfil_cliente = ClienteProfileSerializer(required=False)
+    perfil_prestador = PrestadorProfileSerializer(required=False)
+
+    class Meta:
+        model = User
+        fields = [
+            'id', 'email', 'nome_completo', 'dt_nascimento', 'genero', 'cpf', 'tipo_usuario',
+            'perfil_cliente', 'perfil_prestador'
+        ]
+        read_only_fields = ['id', 'email', 'cpf', 'tipo_usuario'] # Email e CPF geralmente não se muda facilmente, Tipo não muda
+
+    def to_representation(self, instance):
+        # Remove o perfil que não corresponde ao tipo do usuário para limpar a resposta
+        ret = super().to_representation(instance)
+        if instance.tipo_usuario == 'cliente':
+            ret.pop('perfil_prestador', None)
+        elif instance.tipo_usuario == 'prestador':
+            ret.pop('perfil_cliente', None)
+        return ret
+
+    def update(self, instance, validated_data):
+        # Atualiza dados do User
+        instance.nome_completo = validated_data.get('nome_completo', instance.nome_completo)
+        instance.dt_nascimento = validated_data.get('dt_nascimento', instance.dt_nascimento)
+        instance.genero = validated_data.get('genero', instance.genero)
+        instance.save()
+
+        # Atualiza dados do Profile aninhado
+        if instance.tipo_usuario == 'cliente':
+            profile_data = validated_data.get('perfil_cliente')
+            if profile_data:
+                profile = instance.perfil_cliente
+                for attr, value in profile_data.items():
+                    setattr(profile, attr, value)
+                profile.save()
+        
+        elif instance.tipo_usuario == 'prestador':
+            profile_data = validated_data.get('perfil_prestador')
+            if profile_data:
+                profile = instance.perfil_prestador
+                for attr, value in profile_data.items():
+                    setattr(profile, attr, value)
+                profile.save()
+
+        return instance
+
+class UserListSerializer(serializers.ModelSerializer):
+    """
+    Serializer simples para listagem de usuários.
+    """
+    class Meta:
+        model = User
+        fields = ['id', 'nome_completo', 'email', 'tipo_usuario']

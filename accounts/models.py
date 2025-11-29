@@ -117,9 +117,9 @@ class User(AbstractUser):
     nome_completo = models.CharField(max_length=255, verbose_name="Nome Completo")
     tipo_usuario = models.CharField(max_length=10, choices=TIPO_USUARIO_ESCOLHA, null=True, blank=True)
     email = models.EmailField(unique=True)
-    dt_nascimento = models.DateField(blank=True, null=True)
-    genero = models.CharField(max_length=1, choices=ESCOLHA_GENERO, null=True, blank=True)
-    cpf = models.CharField(max_length=11, unique=True, null=True, blank=True, help_text='CPF sem pontuação')
+    dt_nascimento = models.DateField(null=True)
+    genero = models.CharField(max_length=1, choices=ESCOLHA_GENERO, null=True)
+    cpf = models.CharField(max_length=11, unique=True, null=True, help_text='CPF sem pontuação')
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'nome_completo']
@@ -150,10 +150,10 @@ class User(AbstractUser):
 
 class ClienteProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='perfil_cliente')
-    telefone_contato = models.CharField(max_length=11, blank=True, null=True)
-    cep = models.CharField(max_length=9, blank=True)
-    rua = models.CharField(max_length=150, blank=True)
-    numero_casa = models.CharField(max_length=20, blank=True)
+    telefone_contato = models.CharField(max_length=11, null=True)
+    cep = models.CharField(max_length=9)
+    rua = models.CharField(max_length=150)
+    numero_casa = models.CharField(max_length=20)
     complemento = models.CharField(max_length=100, blank=True)
     cidade = models.CharField(max_length=100, blank=True)
     bairro = models.CharField(max_length=100, blank=True)
@@ -199,7 +199,7 @@ class ClienteProfile(models.Model):
 class PrestadorProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='perfil_prestador')
     biografia = models.TextField(blank=True)
-    telefone_publico = models.CharField(max_length=11, blank=True, null=True)
+    telefone_publico = models.CharField(max_length=11, null=True)
     cep = models.CharField(max_length=8)
     rua = models.CharField(max_length=150)
     numero_casa = models.CharField(max_length=20)
@@ -213,7 +213,7 @@ class PrestadorProfile(models.Model):
     possui_material_proprio = models.BooleanField(default=False)
     atende_fim_de_semana = models.BooleanField(default=False)
     foto_perfil = models.ImageField(upload_to='perfil_prestadores/', null=True, blank=True)
-    nota_media_cache = models.DecimalField(max_digits=3, decimal_places=2, default=0)
+    nota_media_cache = models.DecimalField(max_digits=3, decimal_places=2, default=5)
     total_avaliacoes_cache = models.PositiveIntegerField(default=0)
     acessos_perfil = models.PositiveIntegerField(default=0)
     total_servicos_cache = models.PositiveIntegerField(default=0)

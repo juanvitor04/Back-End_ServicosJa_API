@@ -4,8 +4,8 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import ClienteRegistrationSerializer, PrestadorRegistrationSerializer, PrestadorProfileEditSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
-from .serializers import CustomTokenObtainPairSerializer
-from .models import PrestadorProfile
+from .serializers import CustomTokenObtainPairSerializer, UserProfileSerializer
+from .models import PrestadorProfile, User
 from .serializers import PrestadorPublicoSerializer
 import math
 
@@ -80,10 +80,21 @@ def calcular_distancia(lat1, lon1, lat2, lon2):
     distance = R * c
     return round(distance, 2)
 
+class PrestadorDetailView(generics.RetrieveAPIView):
+    """
+    Endpoint público para visualizar o perfil completo de um prestador específico pelo ID.
+    """
+    queryset = PrestadorProfile.objects.all()
+    serializer_class = PrestadorPublicoSerializer
+    permission_classes = [AllowAny]
+    lookup_field = 'pk' # Busca pelo ID do PrestadorProfile, não do User
+
 class PrestadorListView(generics.ListAPIView):
     """
     Endpoint público para buscar prestadores com filtros e ordenação por distância.
     
+    /api/accounts/prestadores/numero_do_id_do_prestador/
+
     Filtros:
     ?servico=ID
     ?categoria=ID
@@ -94,6 +105,7 @@ class PrestadorListView(generics.ListAPIView):
     ?nota_minima=ID
     
     ?ordenar_por_distancia=true (latitude/longitude do cliente logado ou na URL)
+
     """
     serializer_class = PrestadorPublicoSerializer
     permission_classes = [AllowAny]
@@ -182,13 +194,23 @@ class PrestadorListView(generics.ListAPIView):
         serializer = self.get_serializer(prestadores_lista, many=True)
         return Response(serializer.data)
 
-class PrestadorProfileEditView(generics.UpdateAPIView):
+class PrestadorProfileEditView(generics.RetrieveUpdateAPIView):
     """
-    Endpoint para edição do perfil do prestador (foto e biografia).
-    precisa de autenticação.
+    Endpoint para ver e editar o perfil do prestador logado.
+    Recupera o prestador baseado no token de autenticação (user.perfil_prestador).
     """
     serializer_class = PrestadorProfileEditSerializer
     permission_classes = [IsAuthenticated]
     
     def get_object(self):
         return self.request.user.perfil_prestador
+
+class UserProfileView(generics.RetrieveUpdateAPIView):
+    """
+    Endpoint para ver e editar o perfil do usuário logado (Seja Cliente ou Prestador).
+    """
+    serializer_class = UserProfileSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user

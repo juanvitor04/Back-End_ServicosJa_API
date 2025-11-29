@@ -217,7 +217,10 @@ REST_FRAMEWORK = {
     # Define a permissão padrão (ex: só utilizadores logados)
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.AllowAny',
-    )
+    ),
+    # Configuração de data para o padrão brasileiro
+    'DATE_INPUT_FORMATS': ["%d/%m/%Y", "%Y-%m-%d"],
+    'DATE_FORMAT': "%d/%m/%Y",
 }
 
 SIMPLE_JWT = {
