@@ -103,6 +103,8 @@ class PrestadorListView(generics.ListAPIView):
     ?atende_fim_de_semana=true/false
     ?melhor_avaliado=true
     ?nota_minima=ID
+    ?nome=nome_prestador
+    ?nome_servico=nome_servico
     
     ?ordenar_por_distancia=true (latitude/longitude do cliente logado ou na URL)
 
@@ -118,6 +120,16 @@ class PrestadorListView(generics.ListAPIView):
         tem_material = self.request.query_params.get('possui_material_proprio')
         disponibilidade = self.request.query_params.get('disponibilidade')
         fim_de_semana = self.request.query_params.get('atende_fim_de_semana')
+        nome = self.request.query_params.get('nome')
+        nome_servico = self.request.query_params.get('nome_servico')
+
+        # Filtro por nome (case-insensitive)
+        if nome:
+            queryset = queryset.filter(user__nome_completo__icontains=nome)
+
+        # Filtro por nome do serviço (case-insensitive)
+        if nome_servico:
+            queryset = queryset.filter(servico__nome__icontains=nome_servico)
 
         # Filtro por ID do Serviço
         if servico_id:

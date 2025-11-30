@@ -27,6 +27,21 @@ class AvaliacaoListView(generics.ListAPIView):
         
         if prestador_id:
             queryset = queryset.filter(solicitacao_contato__prestador__id=prestador_id)
+
+        # Filtro por nota mínima (ex: pegar só as 5 estrelas)
+        nota_minima = self.request.query_params.get('nota_minima')
+        if nota_minima:
+            queryset = queryset.filter(nota__gte=nota_minima)
+
+        # Ordenação
+        ordenar = self.request.query_params.get('ordenar')
+        if ordenar == 'maior_nota':
+            queryset = queryset.order_by('-nota', '-data_criacao')
+        elif ordenar == 'menor_nota':
+            queryset = queryset.order_by('nota', '-data_criacao')
+        else:
+            # Padrão: Mais recentes primeiro
+            queryset = queryset.order_by('-data_criacao')
             
         return queryset
 

@@ -188,6 +188,18 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         data['nome'] = self.user.nome_completo
         data['email'] = self.user.email
         data['tipo_usuario'] = self.user.tipo_usuario
+
+        if self.user.tipo_usuario == 'cliente':
+            try:
+                data['profile_id'] = self.user.perfil_cliente.id
+            except ClienteProfile.DoesNotExist:
+                data['profile_id'] = None
+        elif self.user.tipo_usuario == 'prestador':
+            try:
+                data['profile_id'] = self.user.perfil_prestador.id
+            except PrestadorProfile.DoesNotExist:
+                data['profile_id'] = None
+        
         return data
 
 class AvaliacaoSimplesSerializer(serializers.ModelSerializer):
