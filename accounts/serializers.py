@@ -34,12 +34,14 @@ class ClienteRegistrationSerializer(serializers.ModelSerializer):
             'cep', 
             'rua', 
             'numero_casa', 
+            'tipo_usuario',
         ]
         extra_kwargs = {
             'password': {'write_only': True},
             'dt_nascimento': {'required': True},
             'genero': {'required': True},
             'cpf': {'required': True},
+            'tipo_usuario': {'read_only': True},
         }
 
     def validate(self, data):
@@ -119,12 +121,14 @@ class PrestadorRegistrationSerializer(serializers.ModelSerializer):
             'atende_fim_de_semana',
             'categoria',
             'servico',
+            'tipo_usuario',
         ]
         extra_kwargs = {
             'password': {'write_only': True},
             'dt_nascimento': {'required': True},
             'genero': {'required': True},
             'cpf': {'required': True},
+            'tipo_usuario': {'read_only': True},
         }
 
     def validate(self, data):
