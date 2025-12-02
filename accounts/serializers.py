@@ -315,9 +315,19 @@ class ClienteProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = ClienteProfile
         fields = ['telefone_contato', 'cep', 'rua', 'numero_casa', 'complemento', 'cidade', 'bairro', 'estado', 'latitude', 'longitude']
+        read_only_fields = [
+            'latitude', 
+            'longitude'
+        ]
 
 class PrestadorProfileSerializer(serializers.ModelSerializer):
     servico = serializers.PrimaryKeyRelatedField(queryset=Servico.objects.all(), required=False)
+    categoria = serializers.IntegerField(source='servico.categoria.id', read_only=True)
+    categoria_id = serializers.PrimaryKeyRelatedField(
+        queryset=CategoriaServico.objects.all(),
+        write_only=True, 
+        required=False
+    )
 
     class Meta:
         model = PrestadorProfile
@@ -325,8 +335,24 @@ class PrestadorProfileSerializer(serializers.ModelSerializer):
             'biografia', 'telefone_publico', 'cep', 'rua', 'numero_casa', 'complemento', 
             'cidade', 'bairro', 'estado', 'latitude', 'longitude', 
             'disponibilidade', 'possui_material_proprio', 'atende_fim_de_semana', 
-            'foto_perfil', 'servico'
+            'foto_perfil', 'servico', 'categoria', 'categoria_id'
         ]
+        read_only_fields = [
+            'latitude',
+            'longitude',
+        ]
+
+    def validate(self, data):
+        servico = data.get('servico')
+        categoria = data.get('categoria_id')
+
+        if servico and categoria:
+            if servico.categoria != categoria:
+                raise serializers.ValidationError({"servico": f"O serviço '{servico.nome}' não pertence à categoria '{categoria.nome}'."})
+            
+        return data
+    
+
 
 class UserProfileSerializer(serializers.ModelSerializer):
     """
@@ -337,11 +363,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
     # Campos aninhados para edição
     perfil_cliente = ClienteProfileSerializer(required=False)
     perfil_prestador = PrestadorProfileSerializer(required=False)
+    user_id = serializers.IntegerField(source='id', read_only=True)
 
     class Meta:
         model = User
         fields = [
-            'id', 'email', 'nome_completo', 'dt_nascimento', 'genero', 'cpf', 'tipo_usuario',
+            'user_id', 'email', 'nome_completo', 'dt_nascimento', 'genero', 'cpf', 'tipo_usuario',
             'perfil_cliente', 'perfil_prestador'
         ]
         read_only_fields = ['id', 'email', 'cpf', 'tipo_usuario']
