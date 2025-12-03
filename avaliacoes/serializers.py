@@ -18,6 +18,12 @@ class CriarAvaliacaoSerializer(serializers.ModelSerializer):
         if value.cliente != user:
             raise serializers.ValidationError("Você só pode avaliar contatos que você iniciou.")
         
+        if not value.servico_realizado:
+            raise serializers.ValidationError("Este serviço ainda não foi marcado como concluído pelo prestador.")
+
+        if hasattr(value, 'avaliacao'):
+             raise serializers.ValidationError("Este serviço já foi avaliado.")
+
         return value
 
 class AvaliacaoSerializer(serializers.ModelSerializer):

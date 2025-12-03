@@ -3,9 +3,7 @@ from .models import SolicitacaoContato
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
-
 class ContatoSerializer(serializers.ModelSerializer):
-    # Recebemos apenas os IDs
     prestador_id = serializers.PrimaryKeyRelatedField(
         source='prestador', 
         queryset=User.objects.filter(tipo_usuario='prestador')
@@ -16,8 +14,26 @@ class ContatoSerializer(serializers.ModelSerializer):
         fields = ['prestador_id', 'servico']
 
     def validate(self, data):
-        # Evita que prestador contate a si mesmo
         request = self.context.get('request')
         if request and request.user == data['prestador']:
             raise serializers.ValidationError("Você não pode iniciar contato consigo mesmo.")
         return data
+
+class SolicitacaoContatoDetailSerializer(serializers.ModelSerializer):
+    cliente_nome = serializers.CharField(source='cliente.first_name', read_only=True)
+    prestador_nome = serializers.CharField(source='prestador.first_name', read_only=True)
+    servico_nome = serializers.CharField(source='servico.nome', read_only=True)
+    
+    avaliacao_realizada = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = SolicitacaoContato
+        fields = [
+            'id', 
+            'cliente', 'cliente_nome',
+            'prestador', 'prestador_nome',
+            'servico', 'servico_nome',
+            'servico_realizado',
+            'avaliacao_realizada',
+            'data_clique'
+        ]
