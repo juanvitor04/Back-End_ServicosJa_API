@@ -35,5 +35,6 @@ class SolicitacaoContatoDetailSerializer(serializers.ModelSerializer):
             'servico', 'servico_nome',
             'servico_realizado',
             'avaliacao_realizada',
-            'data_clique'
+            'data_clique',
+            'data_conclusao'
         ]

@@ -11,6 +11,7 @@ class SolicitacaoContato(models.Model):
     
     servico_realizado = models.BooleanField(default=False)
     data_clique = models.DateTimeField(auto_now_add=True)
+    data_conclusao = models.DateTimeField(null=True, blank=True)
 
     @property
     def avaliacao_realizada(self):

@@ -321,10 +321,11 @@ class ClienteProfileEditSerializer(serializers.ModelSerializer):
 
 class ClienteProfileSerializer(serializers.ModelSerializer):
     foto_perfil = serializers.ImageField(required=False)
+    data_registro = serializers.DateTimeField(source='created_at', format="%d/%m/%Y", read_only=True)
 
     class Meta:
         model = ClienteProfile
-        fields = ['telefone_contato', 'cep', 'rua', 'numero_casa', 'complemento', 'cidade', 'bairro', 'estado', 'latitude', 'longitude', 'foto_perfil']
+        fields = ['telefone_contato', 'cep', 'rua', 'numero_casa', 'complemento', 'cidade', 'bairro', 'estado', 'latitude', 'longitude', 'foto_perfil', 'data_registro']
         read_only_fields = [
             'latitude', 
             'longitude'

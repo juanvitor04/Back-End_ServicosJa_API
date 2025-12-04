@@ -2,6 +2,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from urllib.parse import quote
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from .models import SolicitacaoContato
 from .serializers import ContatoSerializer, SolicitacaoContatoDetailSerializer
@@ -85,6 +86,7 @@ class ConcluirServicoView(APIView):
             return Response({"erro": "Solicitação não encontrada ou não pertence a este prestador."}, status=status.HTTP_404_NOT_FOUND)
 
         solicitacao.servico_realizado = True
+        solicitacao.data_conclusao = timezone.now()
         solicitacao.save()
 
         cliente_user = solicitacao.cliente
