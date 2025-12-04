@@ -3,7 +3,8 @@ from .views import (
     ClienteRegistrationView, 
     PrestadorRegistrationView, 
     PrestadorListView, 
-    PrestadorProfileEditView, 
+    PrestadorProfileEditView,
+    ClienteProfileEditView, 
     PrestadorDetailView,
     UserProfileView,
     FavoritoManageView
@@ -20,6 +21,7 @@ urlpatterns = [
 
     # Urls autenticadas
     path('perfil/prestador/editar/', PrestadorProfileEditView.as_view(), name='editar-perfil-prestador'),
+    path('perfil/cliente/editar/', ClienteProfileEditView.as_view(), name='editar-perfil-cliente'),
     
     # User Profile endpoints
     path('me/', UserProfileView.as_view(), name='user-profile'), # Retorna e edita perfil do usuário logado

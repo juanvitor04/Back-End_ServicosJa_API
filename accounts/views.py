@@ -3,7 +3,12 @@ from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import ClienteRegistrationSerializer, PrestadorRegistrationSerializer, PrestadorProfileEditSerializer
+from .serializers import (
+    ClienteRegistrationSerializer, 
+    PrestadorRegistrationSerializer, 
+    PrestadorProfileEditSerializer,
+    ClienteProfileEditSerializer
+)
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import CustomTokenObtainPairSerializer, UserProfileSerializer
 from .models import PrestadorProfile, User
@@ -217,6 +222,13 @@ class PrestadorProfileEditView(generics.RetrieveUpdateAPIView):
     
     def get_object(self):
         return self.request.user.perfil_prestador
+
+class ClienteProfileEditView(generics.RetrieveUpdateAPIView):
+    serializer_class = ClienteProfileEditSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_object(self):
+        return self.request.user.perfil_cliente
 
 class UserProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = UserProfileSerializer
