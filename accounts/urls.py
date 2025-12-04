@@ -5,7 +5,8 @@ from .views import (
     PrestadorListView, 
     PrestadorProfileEditView, 
     PrestadorDetailView,
-    UserProfileView
+    UserProfileView,
+    FavoritoManageView
 )
 
 urlpatterns = [
@@ -22,4 +23,7 @@ urlpatterns = [
     
     # User Profile endpoints
     path('me/', UserProfileView.as_view(), name='user-profile'), # Retorna e edita perfil do usuário logado
+
+    # Favoritos
+    path('favoritos/', FavoritoManageView.as_view(), name='gerenciar-favoritos'),
 ]

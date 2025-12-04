@@ -1,4 +1,5 @@
 from rest_framework import generics, status
+from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -89,9 +90,6 @@ def calcular_distancia(lat1, lon1, lat2, lon2):
     return round(distance, 2)
 
 class PrestadorDetailView(generics.RetrieveAPIView):
-    """
-    Endpoint público para visualizar o perfil completo de um prestador específico pelo ID.
-    """
     queryset = PrestadorProfile.objects.all()
     serializer_class = PrestadorPublicoSerializer
     permission_classes = [AllowAny]
@@ -99,7 +97,6 @@ class PrestadorDetailView(generics.RetrieveAPIView):
 
 class PrestadorListView(generics.ListAPIView):
     """
-    Endpoint público para buscar prestadores com filtros e ordenação por distância.
     
     /api/accounts/prestadores/numero_do_id_do_prestador/
 
@@ -215,10 +212,6 @@ class PrestadorListView(generics.ListAPIView):
         return Response(serializer.data)
 
 class PrestadorProfileEditView(generics.RetrieveUpdateAPIView):
-    """
-    Endpoint para ver e editar o perfil do prestador logado.
-    Recupera o prestador baseado no token de autenticação (user.perfil_prestador).
-    """
     serializer_class = PrestadorProfileEditSerializer
     permission_classes = [IsAuthenticated]
     
@@ -226,11 +219,41 @@ class PrestadorProfileEditView(generics.RetrieveUpdateAPIView):
         return self.request.user.perfil_prestador
 
 class UserProfileView(generics.RetrieveUpdateAPIView):
-    """
-    Endpoint para ver e editar o perfil do usuário logado (Seja Cliente ou Prestador).
-    """
     serializer_class = UserProfileSerializer
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
         return self.request.user
+
+class FavoritoManageView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not hasattr(request.user, 'perfil_cliente'):
+             return Response({"detail": "Apenas clientes podem ter favoritos."}, status=status.HTTP_403_FORBIDDEN)
+        
+        favoritos = request.user.perfil_cliente.favoritos.all()
+        serializer = PrestadorPublicoSerializer(favoritos, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        if not hasattr(request.user, 'perfil_cliente'):
+             return Response({"detail": "Apenas clientes podem adicionar favoritos."}, status=status.HTTP_403_FORBIDDEN)
+             
+        prestador_id = request.data.get('prestador_id')
+        if not prestador_id:
+            return Response({"detail": "ID do prestador não fornecido."}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            prestador = PrestadorProfile.objects.get(id=prestador_id)
+        except PrestadorProfile.DoesNotExist:
+            return Response({"detail": "Prestador não encontrado."}, status=status.HTTP_404_NOT_FOUND)
+            
+        cliente_profile = request.user.perfil_cliente
+        
+        if prestador in cliente_profile.favoritos.all():
+            cliente_profile.favoritos.remove(prestador)
+            return Response({"detail": "Prestador removido dos favoritos.", "favoritado": False}, status=status.HTTP_200_OK)
+        else:
+            cliente_profile.favoritos.add(prestador)
+            return Response({"detail": "Prestador adicionado aos favoritos.", "favoritado": True}, status=status.HTTP_201_CREATED)
