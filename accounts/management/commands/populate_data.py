@@ -1,17 +1,19 @@
 import os
 import random
+import requests
 from decimal import Decimal
 from faker import Faker
 from unittest.mock import patch
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
 
 from accounts.models import ClienteProfile, PrestadorProfile
 from servicos.models import CategoriaServico, Servico, PrestadorServicos
 from contratacoes.models import SolicitacaoContato
 from avaliacoes.models import Avaliacao
-# from portfolio.models import PortfolioItem
+from portfolio.models import PortfolioItem
 
 User = get_user_model()
 fake = Faker('pt_BR')
@@ -105,6 +107,15 @@ def mock_pegar_dados_endereco(cep, rua, numero):
         'estado': fake.state_abbr()
     }
 
+def download_image(url):
+    try:
+        response = requests.get(url, timeout=5)
+        if response.status_code == 200:
+            return ContentFile(response.content, name=url.split("/")[-1])
+    except Exception as e:
+        print(f"Erro ao baixar imagem {url}: {e}")
+    return None
+
 class Command(BaseCommand):
     help = 'Popula o banco de dados com dados de exemplo'
 
@@ -152,7 +163,8 @@ class Command(BaseCommand):
         
         with patch('accounts.models.pegar_dados_endereco', side_effect=mock_pegar_dados_endereco):
             
-            for _ in range(20):
+            # Criar 10 Clientes
+            for i in range(10):
                 email = fake.unique.email()
                 first_name = fake.first_name()
                 last_name = fake.last_name()
@@ -169,7 +181,7 @@ class Command(BaseCommand):
                     cpf=fake.cpf().replace('.', '').replace('-', '')
                 )
                 
-                ClienteProfile.objects.create(
+                profile = ClienteProfile.objects.create(
                     user=user,
                     telefone_contato=f"{random.randint(11, 99)}9{random.randint(10000000, 99999999)}",
                     cep=fake.postcode().replace('-', ''),
@@ -177,6 +189,14 @@ class Command(BaseCommand):
                     numero_casa=str(fake.building_number()),
                     complemento=f"Apto {random.randint(1, 100)}",
                 )
+                
+                # Baixar foto de perfil (opcional para cliente, mas bom ter)
+                gender = 'men' if user.genero == 'M' else 'women'
+                img_url = f"https://randomuser.me/api/portraits/{gender}/{i+1}.jpg"
+                img_file = download_image(img_url)
+                if img_file:
+                    profile.foto_perfil.save(f"cliente_{user.id}.jpg", img_file, save=True)
+
                 clientes.append(user)
                 self.stdout.write(f"Cliente criado: {full_name}")
 
@@ -185,7 +205,8 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.ERROR("ERRO: Nenhum serviço encontrado."))
                 return [], []
 
-            for _ in range(20):
+            # Criar 30 Prestadores
+            for i in range(30):
                 email = fake.unique.email()
                 first_name = fake.first_name()
                 last_name = fake.last_name()
@@ -222,6 +243,28 @@ class Command(BaseCommand):
                     servico=main_service
                 )
                 
+                # Foto de Perfil
+                gender = 'men' if user.genero == 'M' else 'women'
+                # Usar IDs diferentes ou randomicos para variar
+                img_id = random.randint(1, 99)
+                img_url = f"https://randomuser.me/api/portraits/{gender}/{img_id}.jpg"
+                img_file = download_image(img_url)
+                if img_file:
+                    prestador_profile.foto_perfil.save(f"prestador_{user.id}.jpg", img_file, save=True)
+                
+                # Criar 2 Itens de Portfólio
+                for p_idx in range(2):
+                    # Imagem aleatória do Picsum
+                    portfolio_url = f"https://picsum.photos/seed/{user.id}_{p_idx}/400/300"
+                    pf_file = download_image(portfolio_url)
+                    
+                    item = PortfolioItem.objects.create(
+                        prestador=prestador_profile,
+                        descricao=fake.sentence()
+                    )
+                    if pf_file:
+                        item.imagem.save(f"portfolio_{user.id}_{p_idx}.jpg", pf_file, save=True)
+
                 prestadores.append(user)
                 self.stdout.write(f"Prestador criado: {full_name} ({main_service.nome})")
                 
@@ -234,34 +277,38 @@ class Command(BaseCommand):
             self.stdout.write("Sem clientes ou prestadores para interagir.")
             return
 
-        for _ in range(40):
-            cliente = random.choice(clientes)
-            prestador = random.choice(prestadores)
-            
-            try:
-                prestador_profile = prestador.perfil_prestador
-                servico = prestador_profile.servico
-                if not servico:
-                    ps = PrestadorServicos.objects.filter(prestador_profile=prestador_profile).first()
-                    if ps:
-                        servico = ps.servico
-                    else:
-                        continue
-            except Exception as e:
-                self.stdout.write(f"Erro ao obter perfil prestador: {e}")
-                continue
+        # Para cada um dos 30 prestadores, garantir 3 serviços e 3 avaliações
+        for prestador in prestadores:
+            prestador_profile = prestador.perfil_prestador
+            servico = prestador_profile.servico
+            if not servico:
+                # Tenta pegar do PrestadorServicos
+                ps = PrestadorServicos.objects.filter(prestador_profile=prestador_profile).first()
+                if ps:
+                    servico = ps.servico
+                else:
+                    self.stdout.write(f"Prestador {prestador} sem serviço, pulando interações.")
+                    continue
 
-            solicitacao = SolicitacaoContato.objects.create(
-                cliente=cliente,
-                prestador=prestador,
-                servico=servico
-            )
-            
-            if random.random() < 0.7:
-                Avaliacao.objects.create(
-                    solicitacao_contato=solicitacao,
-                    nota=random.randint(1, 5),
-                    comentario=fake.sentence(),
+            # Selecionar 3 clientes aleatórios (pode repetir cliente se necessário, mas temos 10, então ok)
+            selected_clientes = random.sample(clientes, 3)
+
+            for cliente in selected_clientes:
+                # Criar Solicitação (Serviço Realizado)
+                solicitacao = SolicitacaoContato.objects.create(
+                    cliente=cliente,
+                    prestador=prestador,
+                    servico=servico,
+                    servico_realizado=True, # Assumindo que tem esse campo ou status
+                    # Se tiver status, defina como concluído. Vou verificar models se der erro.
+                    # O migration 0002_solicitacaocontato_servico_realizado.py sugere que o campo existe.
                 )
                 
-        self.stdout.write("Interações criadas.")
+                # Criar Avaliação
+                Avaliacao.objects.create(
+                    solicitacao_contato=solicitacao,
+                    nota=random.randint(3, 5), # Notas boas para o exemplo
+                    comentario=fake.sentence(),
+                )
+        
+        self.stdout.write("Interações criadas com sucesso (3 por prestador).")
