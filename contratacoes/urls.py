@@ -3,7 +3,8 @@ from .views import (
     IniciarContatoWhatsAppView,
     SolicitacaoPrestadorListView,
     SolicitacaoClienteListView,
-    ConcluirServicoView
+    ConcluirServicoView,
+    NaoRealizarServicoView
 )
 
 urlpatterns = [
@@ -11,4 +12,5 @@ urlpatterns = [
     path('prestador/solicitacoes/', SolicitacaoPrestadorListView.as_view(), name='prestador-solicitacoes'),
     path('cliente/solicitacoes/', SolicitacaoClienteListView.as_view(), name='cliente-solicitacoes'),
     path('solicitacoes/<int:pk>/concluir/', ConcluirServicoView.as_view(), name='concluir-servico'),
+    path('solicitacoes/<int:pk>/nao-realizado/', NaoRealizarServicoView.as_view(), name='nao-realizar-servico'),
 ]

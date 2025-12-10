@@ -128,7 +128,8 @@ def criacao_servicos():
                 "Téc. de informática e celular",
                 "Social media",
                 "Web designer",
-                "Ilustrador digital"
+                "Ilustrador digital",
+                "Programador"
             ]
         },
         { 

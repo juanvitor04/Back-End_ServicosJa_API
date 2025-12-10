@@ -220,6 +220,7 @@ class PrestadorProfile(models.Model):
     total_avaliacoes_cache = models.PositiveIntegerField(default=0)
     acessos_perfil = models.PositiveIntegerField(default=0)
     total_servicos_cache = models.PositiveIntegerField(default=0)
+    servicos_nao_realizados_cache = models.PositiveIntegerField(default=0)
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

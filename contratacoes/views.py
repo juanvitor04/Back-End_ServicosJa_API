@@ -92,8 +92,7 @@ class ConcluirServicoView(APIView):
         cliente_user = solicitacao.cliente
         prestador_user = request.user
         servico = solicitacao.servico
-        #Lembrar de colocar o link de avaliacao
-        link_avaliacao = "LinkAvaliacao" 
+        link_avaliacao = "https://servicosja-te5n.onrender.com/login" 
 
         if cliente_user.perfil_cliente.telefone_contato:
              telefone_cliente = f"55{cliente_user.perfil_cliente.telefone_contato}"
@@ -118,4 +117,34 @@ class ConcluirServicoView(APIView):
             "sucesso": True,
             "servico_realizado": True,
             "whatsapp_url": whatsapp_url
+        }, status=status.HTTP_200_OK)
+
+
+class NaoRealizarServicoView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            solicitacao = SolicitacaoContato.objects.get(pk=pk, prestador=request.user)
+        except SolicitacaoContato.DoesNotExist:
+            return Response({"erro": "Solicitação não encontrada ou não pertence a este prestador."}, status=status.HTTP_404_NOT_FOUND)
+
+        if solicitacao.data_conclusao:
+             return Response({"erro": "Solicitação já finalizada anteriormente."}, status=status.HTTP_400_BAD_REQUEST)
+
+        solicitacao.servico_realizado = False
+        solicitacao.data_conclusao = timezone.now()
+        solicitacao.save()
+        
+        try:
+            perfil = request.user.perfil_prestador
+            perfil.servicos_nao_realizados_cache += 1
+            perfil.save()
+        except Exception:
+            pass
+
+        return Response({
+            "sucesso": True,
+            "servico_realizado": False,
+            "mensagem": "Serviço marcado como não realizado."
         }, status=status.HTTP_200_OK)
