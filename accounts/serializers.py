@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import Count
 from .models import ClienteProfile, PrestadorProfile
+from .validators import validar_cpf, validar_telefone, validar_cep
 from servicos.models import Servico, CategoriaServico
 from servicos.serializers import ServicoSerializer
 from portfolio.serializers import PortfolioItemSerializer
@@ -13,8 +14,9 @@ User = get_user_model()
 
 class ClienteRegistrationSerializer(serializers.ModelSerializer):
     dt_nascimento = serializers.DateField(format="%d/%m/%Y", input_formats=["%d/%m/%Y", "%Y-%m-%d"])
-    telefone_contato = serializers.CharField(write_only=True)
-    cep = serializers.CharField(write_only=True)
+    telefone_contato = serializers.CharField(write_only=True, validators=[validar_telefone])
+    cep = serializers.CharField(write_only=True, validators=[validar_cep])
+    cpf = serializers.CharField(validators=[validar_cpf], required=True)
     rua = serializers.CharField(write_only=True)
     numero_casa = serializers.CharField(write_only=True)
     
@@ -40,7 +42,6 @@ class ClienteRegistrationSerializer(serializers.ModelSerializer):
             'password': {'write_only': True},
             'dt_nascimento': {'required': True},
             'genero': {'required': True},
-            'cpf': {'required': True},
             'tipo_usuario': {'read_only': True},
         }
 
@@ -79,8 +80,9 @@ class ClienteRegistrationSerializer(serializers.ModelSerializer):
 
 class PrestadorRegistrationSerializer(serializers.ModelSerializer):
     dt_nascimento = serializers.DateField(format="%d/%m/%Y", input_formats=["%d/%m/%Y", "%Y-%m-%d"])
-    telefone_publico = serializers.CharField(write_only=True)
-    cep = serializers.CharField(write_only=True)
+    telefone_publico = serializers.CharField(write_only=True, validators=[validar_telefone])
+    cep = serializers.CharField(write_only=True, validators=[validar_cep])
+    cpf = serializers.CharField(validators=[validar_cpf], required=True)
     rua = serializers.CharField(write_only=True)
     numero_casa = serializers.CharField(write_only=True)
     
@@ -127,7 +129,6 @@ class PrestadorRegistrationSerializer(serializers.ModelSerializer):
             'password': {'write_only': True},
             'dt_nascimento': {'required': True},
             'genero': {'required': True},
-            'cpf': {'required': True},
             'tipo_usuario': {'read_only': True},
         }
 
@@ -272,7 +273,7 @@ class PrestadorPublicoSerializer(serializers.ModelSerializer):
         
         # Inicializa contadores
         distribuicao = {i: 0 for i in range(1, 6)}
-        total = obj.total_avaliacoes_cache # Usando cache para performance
+        total = obj.total_avaliacoes_cache # usando cache
         
         for item in counts:
             distribuicao[item['nota']] = item['count']
@@ -313,6 +314,8 @@ class PrestadorProfileEditSerializer(serializers.ModelSerializer):
 
 class ClienteProfileEditSerializer(serializers.ModelSerializer):
     foto_perfil = serializers.ImageField(required=False)
+    telefone_contato = serializers.CharField(validators=[validar_telefone], required=True)
+    cep = serializers.CharField(validators=[validar_cep], required=True)
     
     class Meta:
         model = ClienteProfile
@@ -322,6 +325,8 @@ class ClienteProfileEditSerializer(serializers.ModelSerializer):
 class ClienteProfileSerializer(serializers.ModelSerializer):
     foto_perfil = serializers.ImageField(required=False)
     data_registro = serializers.DateTimeField(source='created_at', format="%d/%m/%Y", read_only=True)
+    telefone_contato = serializers.CharField(validators=[validar_telefone], required=True)
+    cep = serializers.CharField(validators=[validar_cep], required=True)
 
     class Meta:
         model = ClienteProfile
@@ -339,6 +344,8 @@ class PrestadorProfileSerializer(serializers.ModelSerializer):
         write_only=True, 
         required=False
     )
+    telefone_publico = serializers.CharField(validators=[validar_telefone], required=True)
+    cep = serializers.CharField(validators=[validar_cep], required=True)
 
     class Meta:
         model = PrestadorProfile
@@ -366,9 +373,8 @@ class PrestadorProfileSerializer(serializers.ModelSerializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    """
-    Serializer para o endpoint /me/. Permite ver e editar dados do usuário e do seu perfil específico.
-    """
+    #Serializer para o endpoint /me/. Permite ver e editar dados do usuário e do seu perfil específico.
+
     dt_nascimento = serializers.DateField(format="%d/%m/%Y", input_formats=["%d/%m/%Y", "%Y-%m-%d"], required=False)
     
     # Campos aninhados para edição
