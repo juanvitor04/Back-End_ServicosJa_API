@@ -125,7 +125,6 @@ class PrestadorListView(generics.ListAPIView):
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        # Otimização: Carregamos user e servico antecipadamente para evitar N+1
         queryset = PrestadorProfile.objects.all().select_related(
             'user', 'servico', 'servico__categoria'
         ).prefetch_related(
@@ -140,23 +139,18 @@ class PrestadorListView(generics.ListAPIView):
         nome = self.request.query_params.get('nome')
         nome_servico = self.request.query_params.get('nome_servico')
 
-        # Filtro por nome (case-insensitive)
         if nome:
             queryset = queryset.filter(user__nome_completo__icontains=nome)
 
-        # Filtro por nome do serviço (case-insensitive)
         if nome_servico:
             queryset = queryset.filter(servico__nome__icontains=nome_servico)
 
-        # Filtro por ID do Serviço
         if servico_id:
             queryset = queryset.filter(servico__id=servico_id)
 
-        # Filtro por ID da Categoria
         if categoria_id:
             queryset = queryset.filter(servico__categoria__id=categoria_id)
 
-        # Filtros de material, disponibilidade e fim de semana
         if tem_material is not None:
             valor = tem_material.lower() == 'true'
             queryset = queryset.filter(possui_material_proprio=valor)
@@ -169,7 +163,6 @@ class PrestadorListView(generics.ListAPIView):
             valor = fim_de_semana.lower() == 'true'
             queryset = queryset.filter(atende_fim_de_semana=valor)
             
-        # Filtro por avaliação mínima
         nota_minima = self.request.query_params.get('nota_minima')
         if nota_minima:
              try:
@@ -177,13 +170,11 @@ class PrestadorListView(generics.ListAPIView):
                  queryset = queryset.filter(nota_media_cache__gte=nota)
              except ValueError:
                  pass
-        
-        # Filtro para mostrar os mais bem avaliados (ordenação)
+             
         melhor_avaliado = self.request.query_params.get('melhor_avaliado')
         if melhor_avaliado and melhor_avaliado.lower() == 'true':
             queryset = queryset.order_by('-nota_media_cache')
 
-        # Evita duplicatas
         return queryset.distinct()
     
     def list(self, request, *args, **kwargs):
