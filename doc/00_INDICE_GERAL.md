@@ -41,7 +41,6 @@ Bem-vindo! Este é o índice de toda a documentação do projeto.
 **Contém:**
 - Lista completa de modelos comentados
 - Lista completa de views comentadas
-- Linhas de código e comentários por arquivo
 - Padrões utilizados
 
 ---
@@ -50,7 +49,6 @@ Bem-vindo! Este é o índice de toda a documentação do projeto.
 **Tempo de leitura:** 5-10 minutos  
 **Para quem:** Quem quer ver os números  
 **Contém:**
-- Tabelas com aumento de linhas (+157%)
 - Cobertura de documentação (100%)
 - Antes vs Depois
 - Impacto para equipe
@@ -126,15 +124,14 @@ Bem-vindo! Este é o índice de toda a documentação do projeto.
 
 ### Caminho: `accounts/`
 
-**accounts/models.py** (588 linhas)
+**accounts/models.py**
 - ✅ User model customizado
 - ✅ ClienteProfile
 - ✅ PrestadorProfile
 - ✅ Funções: pegar_dados_endereco, _sanitize_telefone
-- **Comentários:** 150+ linhas
 - **Tempo leitura:** 20 minutos
 
-**accounts/views.py** (653 linhas)
+**accounts/views.py**
 - ✅ ClienteRegistrationView (POST)
 - ✅ PrestadorRegistrationView (POST)
 - ✅ CustomTokenObtainPairView (login)
@@ -145,42 +142,37 @@ Bem-vindo! Este é o índice de toda a documentação do projeto.
 - ✅ UserProfileView (GET/PUT/PATCH)
 - ✅ FavoritoManageView (GET/POST)
 - ✅ calcular_distancia() - Haversine
-- **Comentários:** 200+ linhas
 - **Tempo leitura:** 25 minutos
 
 ---
 
 ### Caminho: `servicos/`
 
-**servicos/models.py** (176 linhas)
+**servicos/models.py**
 - ✅ CategoriaServico
 - ✅ Servico
 - ✅ PrestadorServicos
-- **Comentários:** 140+ linhas
 - **Tempo leitura:** 15 minutos
 
-**servicos/views.py** (146 linhas)
+**servicos/views.py**
 - ✅ CategoriaViewSet (serializer dinâmico)
 - ✅ ServicoViewSet
-- **Comentários:** 100+ linhas
 - **Tempo leitura:** 10 minutos
 
 ---
 
 ### Caminho: `contratacoes/`
 
-**contratacoes/models.py** (101 linhas)
+**contratacoes/models.py**
 - ✅ SolicitacaoContato
-- **Comentários:** 80+ linhas
 - **Tempo leitura:** 10 minutos
 
-**contratacoes/views.py** (358 linhas)
+**contratacoes/views.py**
 - ✅ IniciarContatoWhatsAppView (POST)
 - ✅ SolicitacaoPrestadorListView (GET)
 - ✅ SolicitacaoClienteListView (GET)
 - ✅ ConcluirServicoView (POST)
 - ✅ NaoRealizarServicoView (POST)
-- **Comentários:** 180+ linhas
 - **Tempo leitura:** 20 minutos
 
 ---
@@ -189,30 +181,26 @@ Bem-vindo! Este é o índice de toda a documentação do projeto.
 
 **avaliacoes/models.py** (86 linhas)
 - ✅ Avaliacao (1-5 stars)
-- **Comentários:** 80+ linhas
+- **Comentários:** 80+ l
+- ✅ Avaliacao (1-5 stars)
 - **Tempo leitura:** 10 minutos
 
-**avaliacoes/views.py** (236 linhas)
+**avaliacoes/views.py**
 - ✅ CriarAvaliacaoView (POST)
 - ✅ AvaliacaoListView (GET com estatísticas)
 - ✅ AvaliacaoDetailView (GET)
-- **Comentários:** 160+ linhas
-- **Tempo leitura:** 15 minutos
-
 ---
 
 ### Caminho: `portfolio/`
 
 **portfolio/models.py** (73 linhas)
 - ✅ PortfolioItem
-- **Comentários:** 70+ linhas
+- **Comentários:** 70+ 
+- ✅ PortfolioItem
 - **Tempo leitura:** 8 minutos
 
-**portfolio/views.py** (104 linhas)
+**portfolio/views.py**
 - ✅ PortfolioViewSet (CRUD)
-- **Comentários:** 90+ linhas
-- **Tempo leitura:** 10 minutos
-
 ---
 
 ## 🗺️ Mapa Visual de Documentação
@@ -378,8 +366,6 @@ Para cada novo desenvolvedor:
 
 - ✅ 10 modelos comentados
 - ✅ 18+ views comentadas
-- ✅ 1,500+ linhas de comentários em código
-- ✅ 3,700+ linhas em documentação markdown
 - ✅ 100% de cobertura de documentação
 - ✅ 5 arquivos nesta pasta
 - ✅ 6 arquivos em doc/

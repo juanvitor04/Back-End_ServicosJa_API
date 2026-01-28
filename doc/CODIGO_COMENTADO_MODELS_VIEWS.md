@@ -39,8 +39,6 @@ Este documento lista todos os arquivos que receberam comentários detalhados (do
   - Índices para otimização geográfica
   - Método `save()` com validações e geolocalização
 
-**Total de comentários:** 150+ linhas
-
 ---
 
 ### 2. **accounts/views.py** ✅ COMPLETO
@@ -85,8 +83,6 @@ Este documento lista todos os arquivos que receberam comentários detalhados (do
   - GET: Listar favoritos
   - POST: Adicionar/remover (toggle) um prestador dos favoritos
 
-**Total de comentários:** 200+ linhas
-
 ---
 
 ### 3. **contratacoes/models.py** ✅ COMPLETO
@@ -98,8 +94,6 @@ Este documento lista todos os arquivos que receberam comentários detalhados (do
   - Property: `avaliacao_realizada` (verifica se foi avaliado)
   - Índices em cliente/data e prestador/servico_realizado
   - Relacionamento implícito com Avaliacao via OneToOne
-
-**Total de comentários:** 80+ linhas
 
 ---
 
@@ -125,8 +119,6 @@ Este documento lista todos os arquivos que receberam comentários detalhados (do
   - POST: Prestador marca serviço como não realizado
   - Efeito: Incrementa cache de serviços_nao_realizados
 
-**Total de comentários:** 180+ linhas
-
 ---
 
 ### 5. **avaliacoes/models.py** ✅ COMPLETO
@@ -137,8 +129,6 @@ Este documento lista todos os arquivos que receberam comentários detalhados (do
   - Nota: 1-5 estrelas (validada com MinValueValidator/MaxValueValidator)
   - Comentário: Feedback opcional
   - Relacionamento com sinal para atualizar cache de nota_media
-
-**Total de comentários:** 80+ linhas
 
 ---
 
@@ -161,8 +151,6 @@ Este documento lista todos os arquivos que receberam comentários detalhados (do
 - **`AvaliacaoDetailView`** - Detalhe de avaliação
   - GET: Retorna dados de uma avaliação específica
 
-**Total de comentários:** 160+ linhas
-
 ---
 
 ### 7. **portfolio/models.py** ✅ COMPLETO
@@ -174,13 +162,9 @@ Este documento lista todos os arquivos que receberam comentários detalhados (do
   - Descrição opcional
   - Relacionamento com PrestadorProfile
 
-**Total de comentários:** 70+ linhas
-
 ---
 
 ### 8. **servicos/models.py** ✅ COMPLETO
-
-#### Modelos:
 - **`CategoriaServico`** - Categoria de serviço
   - Organiza serviços em grupos (Encanamento, Eletricidade, etc)
   - Ícone no Cloudinary
@@ -195,8 +179,6 @@ Este documento lista todos os arquivos que receberam comentários detalhados (do
   - unique_together: Um prestador/serviço apenas uma vez
   - Índices para otimização
 
-**Total de comentários:** 140+ linhas
-
 ---
 
 ### 9. **servicos/views.py** ✅ COMPLETO
@@ -210,8 +192,6 @@ Este documento lista todos os arquivos que receberam comentários detalhados (do
 
 - **`ServicoViewSet`** - ViewSet para serviços
   - GET: Listar todos os serviços
-
-**Total de comentários:** 100+ linhas
 
 ---
 

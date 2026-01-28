@@ -44,8 +44,6 @@ Todo o código Python dos aplicativos Django foi comentado e documentado, especi
 | **Arquivos comentados** | 10 |
 | **Modelos documentados** | 10 |
 | **Views/ViewSets documentados** | 18 |
-| **Total de linhas de código** | 1,150+ |
-| **Total de linhas de comentários** | 1,250+ |
 | **Cobertura de documentação** | 100% |
 
 ---
