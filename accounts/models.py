@@ -8,11 +8,23 @@ from django.core.exceptions import ValidationError as ModelValidationError
 from geopy.geocoders import Nominatim
 from time import sleep
 from decimal import Decimal
+from django.utils import timezone
+
 
 def _sanitize_telefone(phone):
     if not phone:
         return ""
     return ''.join(filter(str.isdigit, str(phone)))
+
+
+class ActiveManager(models.Manager):
+    """
+    Manager que retorna apenas registros não deletados.
+    Uso padrão: Model.objects.all() retorna apenas ativos
+    """
+    def get_queryset(self):
+        return super().get_queryset().filter(is_deleted=False)
+
 
 def pegar_dados_endereco(cep: str | int, rua: str, numero: str | int) -> dict:    
     cep_str = str(cep)
@@ -98,6 +110,7 @@ def pegar_dados_endereco(cep: str | int, rua: str, numero: str | int) -> dict:
 
     return None
 
+
 class User(AbstractUser):
     TIPO_USUARIO_ESCOLHA = [
         ('cliente', 'Cliente'),
@@ -120,9 +133,19 @@ class User(AbstractUser):
     dt_nascimento = models.DateField(null=True)
     genero = models.CharField(max_length=1, choices=ESCOLHA_GENERO, null=True)
     cpf = models.CharField(max_length=11, null=True, help_text='CPF sem pontuação')
+    is_deleted = models.BooleanField(default=False, editable=False)
+    deleted_at = models.DateTimeField(null=True, blank=True, editable=False)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'nome_completo']
+
+    objects = ActiveManager()
+    all_objects = models.Manager()
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['is_deleted'], name='idx_user_deleted'),
+        ]
 
     @property
     def idade(self) -> int:
@@ -130,6 +153,16 @@ class User(AbstractUser):
             return 0
         hoje = date.today()
         return hoje.year - self.dt_nascimento.year - ((hoje.month, hoje.day) < (self.dt_nascimento.month, self.dt_nascimento.day))
+
+    def delete(self, *args, **kwargs):
+        """Soft delete: marca como deletado em vez de remover"""
+        self.is_deleted = True
+        self.deleted_at = timezone.now()
+        self.save(update_fields=['is_deleted', 'deleted_at'])
+    
+    def hard_delete(self, *args, **kwargs):
+        """Hard delete real (apenas admin, use com cuidado)"""
+        super().delete(*args, **kwargs)
 
     def clean(self):
         if self.tipo_usuario == 'cliente' and hasattr(self, 'perfil_prestador'):
@@ -163,9 +196,19 @@ class ClienteProfile(models.Model):
     
     favoritos = models.ManyToManyField('PrestadorProfile', related_name='favoritado_por', blank=True)
     foto_perfil = models.ImageField(upload_to='perfil_clientes/', null=True, blank=True)
+    is_deleted = models.BooleanField(default=False, editable=False)
+    deleted_at = models.DateTimeField(null=True, blank=True, editable=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    objects = ActiveManager()
+    all_objects = models.Manager()
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['is_deleted'], name='idx_cliente_deleted'),
+        ]
 
     def save(self, *args, **kwargs):
         run_geocode = False
@@ -226,11 +269,17 @@ class PrestadorProfile(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     servico = models.ForeignKey('servicos.Servico', on_delete=models.SET_NULL, null=True, blank=True, related_name='prestadores')
+    is_deleted = models.BooleanField(default=False, editable=False)
+    deleted_at = models.DateTimeField(null=True, blank=True, editable=False)
+
+    objects = ActiveManager()
+    all_objects = models.Manager()
 
     class Meta:
         indexes = [
             models.Index(fields=['cep'], name='idx_cep'),
             models.Index(fields=['latitude', 'longitude'], name='idx_geo'),
+            models.Index(fields=['is_deleted'], name='idx_prestador_deleted'),
         ]
     
     def save(self, *args, **kwargs):
